@@ -169,7 +169,7 @@
 			powerCharacteristicFound = service.getCharacteristic(powerCharacteristic);			
             return;
         })
-        .then({
+        .then(() => {
             			
 			speedCharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangeSpeed);
             speedCharacteristicFound.startNotifications();
