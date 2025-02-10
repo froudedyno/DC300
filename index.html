@@ -176,11 +176,11 @@
 		})
 		.then(characteristic => {
 			torqueCharacteristicFound = characteristic;
-			/*characteristic.addEventListener('characteristicvaluechanged', handleCharacteristicChangeTorque);
+			characteristic.addEventListener('characteristicvaluechanged', handleCharacteristicChangeTorque);
 			characteristic.startNotifications();
 			//updateTorqueValue(characteristic.readValue().getFloat32(0, true));
 			console.log("Torque characteristic initiazed:", characteristic.uuid);
-			return bleServiceFound.getCharacteristic(powerCharacteristic);*/
+			//return bleServiceFound.getCharacteristic(powerCharacteristic);
 		})
 		/*.then(characteristic => {
 			powerCharacteristicFound = characteristic;
