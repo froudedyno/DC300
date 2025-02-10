@@ -11,58 +11,58 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Froude DC300</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" type="image/png" href="froude.ico">
+	<title>Froude DC300</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="icon" type="image/png" href="froude.ico">
 	<link rel="stylesheet" type="text/css" href="style.css">
-    <meta charset="UTF-8">
+	<meta charset="UTF-8">
 </head>
 <body>
 	<div class="topnav">
 		<h1>Froude DC300</h1>
 	</div>
 	<div class="content">
-        <div class="card-grid">
-            <div class="card">
-                <p>
-				  <button id="connectBleButton" class="connectButton">Connect to Device</button>
-				  <button id="disconnectBleButton" class="disconnectButton">Disconnect Device</button>
+		<div class="card-grid">
+			<div class="card">
+				<p>
+					<button id="connectBleButton" class="connectButton">Connect to Device</button>
+					<button id="disconnectBleButton" class="disconnectButton">Disconnect Device</button>
 				</p>
 				<p class="gray-label">State: <strong><span id="bleState" style="color:#d13a30;">Disconnected</span></strong></p>
 			</div>
-        </div>
-        <div class="card-grid">
-            <div class="card">
-                <h2>Speed (rpm)</h2>
+		</div>
+		<div class="card-grid">
+			<div class="card">
+				<h2>Speed (rpm)</h2>
 				<p class="reading"><span id="spdValContainer">NaN</span></p>
-                <p class="gray-label">Last reading: <span id="spdTimestamp"></span></p>
-            </div>
+				<p class="gray-label">Last reading: <span id="spdTimestamp"></span></p>
+			</div>
 			
 			<div class="card">
-                <h2 id="trqLabel">Torque (Nm)</h2>
+				<h2 id="trqLabel">Torque (Nm)</h2>
 				<p class="reading"><span id="trqValContainer">NaN</span></p>
-                <p class="gray-label">Last reading: <span id="trqTimestamp"></span></p>
-            </div>		
-
+				<p class="gray-label">Last reading: <span id="trqTimestamp"></span></p>
+			</div>		
+			
 			<div class="card">
-                <h2 id="pwrLabel">Power (KW)</h2>
+				<h2 id="pwrLabel">Power (KW)</h2>
 				<p class="reading"><span id="pwrValContainer">NaN</span></p>
-                <p class="gray-label">Last reading: <span id="pwrTimestamp"></span></p>
-            </div>			
-
+				<p class="gray-label">Last reading: <span id="pwrTimestamp"></span></p>
+			</div>			
+			
 			<div class="card">
 				<h2>Show Imperial?</h2>
 				<p class="reading">
 					<span>
 						<label class="switch">
-						  <input type="checkbox" id="chkSetImpContainer">
-						  <span class="slider"></span>
+							<input type="checkbox" id="chkSetImpContainer">
+							<span class="slider"></span>
 						</label>
 					</span>
 				</p>
 			</div>
-        </div>
-    </div>
+		</div>
+	</div>
 	<div class="footer">
 		<p><a href="https://froudedyno.com/">Come and visit us at froudedyno.com</a></p>
 	</div>	  
@@ -172,17 +172,17 @@
 			characteristic.startNotifications();
 			//updateSpeedValue(characteristic.readValue().getFloat32(0, true));
 			console.log("Speed characteristic initiazed:", characteristic.uuid);
-			//return bleServiceFound.getCharacteristic(torqueCharacteristic);
+			return bleServiceFound.getCharacteristic(torqueCharacteristic);
 		})
-		/*.then(characteristic => {
+		.then(characteristic => {
 			torqueCharacteristicFound = characteristic;
-			characteristic.addEventListener('characteristicvaluechanged', handleCharacteristicChangeTorque);
+			/*characteristic.addEventListener('characteristicvaluechanged', handleCharacteristicChangeTorque);
 			characteristic.startNotifications();
 			//updateTorqueValue(characteristic.readValue().getFloat32(0, true));
 			console.log("Torque characteristic initiazed:", characteristic.uuid);
-			return bleServiceFound.getCharacteristic(powerCharacteristic);
+			return bleServiceFound.getCharacteristic(powerCharacteristic);*/
 		})
-		.then(characteristic => {
+		/*.then(characteristic => {
 			powerCharacteristicFound = characteristic;
 			characteristic.addEventListener('characteristicvaluechanged', handleCharacteristicChangePower);
 			characteristic.startNotifications();
