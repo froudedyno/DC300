@@ -199,12 +199,16 @@
 		try {
 			const speedCharacteristicFound = await bleServiceFound.getCharacteristic(speedCharacteristic);
 			const torqueCharacteristicFound = await bleServiceFound.getCharacteristic(torqueCharacteristic);
+			const powerCharacteristicFound = await bleServiceFound.getCharacteristic(powerCharacteristic);
 			
 			await speedCharacteristicFound.startNotifications();
-			torqueCharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangeSpeed);
+			speedCharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangeSpeed);
 			
 			await torqueCharacteristicFound.startNotifications();
 			torqueCharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangeTorque);
+			
+			await powerCharacteristicFound.startNotifications();
+			powerCharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangePower);
 			
 			console.log('Notifications started');
 		} catch (error) {
