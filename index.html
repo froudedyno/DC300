@@ -164,9 +164,10 @@
 		.then(service => {
 			bleServiceFound = service;
 			console.log("Service discovered:", service.uuid);
-			return service.getCharacteristic(speedCharacteristic);
+			enableNotifications();
+			//return service.getCharacteristic(speedCharacteristic);
 		})
-		.then(characteristic => {
+		/*.then(characteristic => {
 			speedCharacteristicFound = characteristic;
 			speedCharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangeSpeed);
 			await speedCharacteristicFound.startNotifications();
@@ -182,7 +183,7 @@
 			console.log("Torque characteristic initiazed:", characteristic.uuid);
 			//return bleServiceFound.getCharacteristic(powerCharacteristic);
 		})
-		/*.then(characteristic => {
+		.then(characteristic => {
 			powerCharacteristicFound = characteristic;
 			characteristic.addEventListener('characteristicvaluechanged', handleCharacteristicChangePower);
 			characteristic.startNotifications();
@@ -194,6 +195,23 @@
 		})
 	}
 
+	async function enableNotifications() {
+		try {
+			const speedCharacteristicFound = await service.getCharacteristic(speedCharacteristic);
+			const torqueCharacteristicFound = await service.getCharacteristic(torqueCharacteristic);
+			
+			await speedCharacteristicFound.startNotifications();
+			torqueCharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangeSpeed);
+			
+			await torqueCharacteristicFound.startNotifications();
+			torqueCharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangeTorque);
+			
+			console.log('Notifications started');
+		} catch (error) {
+			console.error('Error starting notifications:', error);
+		}
+	}
+	
 	function onDisconnected(event){
 		console.log('Device Disconnected:', event.target.device.name);
 		bleStateContainer.innerHTML = "Device disconnected";
