@@ -197,8 +197,8 @@
 
 	async function enableNotifications() {
 		try {
-			const speedCharacteristicFound = await service.getCharacteristic(speedCharacteristic);
-			const torqueCharacteristicFound = await service.getCharacteristic(torqueCharacteristic);
+			const speedCharacteristicFound = await bleServiceFound.getCharacteristic(speedCharacteristic);
+			const torqueCharacteristicFound = await bleServiceFound.getCharacteristic(torqueCharacteristic);
 			
 			await speedCharacteristicFound.startNotifications();
 			torqueCharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangeSpeed);
