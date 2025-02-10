@@ -167,9 +167,9 @@
 			speedCharacteristicFound = service.getCharacteristic(speedCharacteristic);
 			torqueCharacteristicFound = service.getCharacteristic(torqueCharacteristic);
 			powerCharacteristicFound = service.getCharacteristic(powerCharacteristic);			
-            return Promise.all([speedCharacteristicFound, torqueCharacteristicFound, powerCharacteristicFound]);
+            return;
         })
-        .then(([speedCharacteristicFound, torqueCharacteristicFound, powerCharacteristicFound]) => {
+        .then({
             			
 			speedCharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangeSpeed);
             speedCharacteristicFound.startNotifications();
@@ -182,8 +182,6 @@
 			powerCharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangePower);
             powerCharacteristicFound.startNotifications();
 			//updatePowerValue(powerCharacteristicFound.readValue().getFloat32(0, true));
-			
-			
 			
 			console.log("Notifications Started.");
         })
@@ -216,24 +214,21 @@
 	}
 	
 	function updateSpeedValue(floatVal){
-		speedValue.innerHTML = floatVal.toFixed(2); // print to 2 dp
-		console.log("Speed Characteristic value changed: ", floatVal);				
+		speedValue.innerHTML = floatVal.toFixed(2); // print to 2 dp			
         speedTimestamp.innerHTML = getDateTime();
 	}	
 	
 	function updateTorqueValue(floatVal){
 		lastTorqueNm = floatVal;
 		if (bShowImperial){ floatVal = floatVal * 0.7376; }
-		torqueValue.innerHTML = floatVal.toFixed(2); // print to 2 dp
-		console.log("Torque Characteristic value changed: ", floatVal);				
+		torqueValue.innerHTML = floatVal.toFixed(2); // print to 2 dp			
         torqueTimestamp.innerHTML = getDateTime();
 	}	
 	
 	function updatePowerValue(floatVal){
 		lastPowerKw = floatVal;
 		if (bShowImperial){ floatVal = floatVal * 1.34102; }
-		powerValue.innerHTML = floatVal.toFixed(2); // print to 2 dp
-		console.log("Power Characteristic value changed: ", floatVal);				
+		powerValue.innerHTML = floatVal.toFixed(2); // print to 2 dp			
         powerTimestamp.innerHTML = getDateTime();
 	}	
 
