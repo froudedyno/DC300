@@ -166,11 +166,8 @@
             console.log("Service discovered:", service.uuid);
 			speedCharacteristicFound = service.getCharacteristic(speedCharacteristic);
 			torqueCharacteristicFound = service.getCharacteristic(torqueCharacteristic);
-			powerCharacteristicFound = service.getCharacteristic(powerCharacteristic);			
-            return;
-        })
-        .then(() => {
-            			
+			powerCharacteristicFound = service.getCharacteristic(powerCharacteristic);	
+
 			speedCharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangeSpeed);
             speedCharacteristicFound.startNotifications();
 			//updateSpeedValue(speedCharacteristicFound.readValue().getFloat32(0, true));
@@ -183,7 +180,8 @@
             powerCharacteristicFound.startNotifications();
 			//updatePowerValue(powerCharacteristicFound.readValue().getFloat32(0, true));
 			
-			console.log("Notifications Started.");
+			console.log("Notifications Started.");			
+            return;
         })
         .catch(error => {
             console.log('Error: ', error);
