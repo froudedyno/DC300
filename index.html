@@ -164,25 +164,31 @@
         .then(service => {
             bleServiceFound = service;
             console.log("Service discovered:", service.uuid);
-			speedCharacteristicFound = service.getCharacteristic(speedCharacteristic);
-			torqueCharacteristicFound = service.getCharacteristic(torqueCharacteristic);
-			powerCharacteristicFound = service.getCharacteristic(powerCharacteristic);	
-
-			speedCharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangeSpeed);
-            speedCharacteristicFound.startNotifications();
-			//updateSpeedValue(speedCharacteristicFound.readValue().getFloat32(0, true));
-            			
-			torqueCharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangeTorque);
-            torqueCharacteristicFound.startNotifications();
-			//updateTorqueValue(torqueCharacteristicFound.readValue().getFloat32(0, true));
-			
-			powerCharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangePower);
-            powerCharacteristicFound.startNotifications();
-			//updatePowerValue(powerCharacteristicFound.readValue().getFloat32(0, true));
-			
-			console.log("Notifications Started.");			
-            return;
-        })
+			return service.getCharacteristic(speedCharacteristic);
+		})
+		.then(characteristic => {
+			speedCharacteristicFound = characteristic;
+			characteristic.addEventListener('characteristicvaluechanged', handleCharacteristicChangeSpeed);
+            characteristic.startNotifications();
+			//updateSpeedValue(characteristic.readValue().getFloat32(0, true));
+			console.log("Speed characteristic initiazed:", characteristic.uuid);
+			return bleServiceFound.getCharacteristic(torqueCharacteristic);
+		})
+		.then(characteristic => {
+			torqueCharacteristicFound = characteristic;
+			characteristic.addEventListener('characteristicvaluechanged', handleCharacteristicChangeTorque);
+            characteristic.startNotifications();
+			//updateTorqueValue(characteristic.readValue().getFloat32(0, true));
+			console.log("Torque characteristic initiazed:", characteristic.uuid);
+			return bleServiceFound.getCharacteristic(powerCharacteristic);
+		})
+		.then(characteristic => {
+			powerCharacteristicFound = characteristic;
+			characteristic.addEventListener('characteristicvaluechanged', handleCharacteristicChangePower);
+            characteristic.startNotifications();
+			//updatePowerValue(characteristic.readValue().getFloat32(0, true));
+			console.log("Power characteristic initiazed:", characteristic.uuid);
+		})
         .catch(error => {
             console.log('Error: ', error);
         })
