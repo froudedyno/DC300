@@ -1,0 +1,300 @@
+<!--
+  DC300 BLE Web server. Original taken from:
+  
+  Rui Santos
+  Complete project details at https://RandomNerdTutorials.com/esp32-web-bluetooth/
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files.
+  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+-->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Froude DC300</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" href="froude.ico">
+	<link rel="stylesheet" type="text/css" href="style.css">
+    <meta charset="UTF-8">
+</head>
+<body>
+	<div class="topnav">
+		<h1>Froude DC300</h1>
+	</div>
+	<div class="content">
+        <div class="card-grid">
+            <div class="card">
+                <p>
+				  <button id="connectBleButton" class="connectButton">Connect to Device</button>
+				  <button id="disconnectBleButton" class="disconnectButton">Disconnect Device</button>
+				</p>
+				<p class="gray-label">State: <strong><span id="bleState" style="color:#d13a30;">Disconnected</span></strong></p>
+			</div>
+        </div>
+        <div class="card-grid">
+            <div class="card">
+                <h2>Speed (rpm)</h2>
+				<p class="reading"><span id="spdValContainer">NaN</span></p>
+                <p class="gray-label">Last reading: <span id="spdTimestamp"></span></p>
+            </div>
+			
+			<div class="card">
+                <h2 id="trqLabel">Torque (Nm)</h2>
+				<p class="reading"><span id="trqValContainer">NaN</span></p>
+                <p class="gray-label">Last reading: <span id="trqTimestamp"></span></p>
+            </div>		
+
+			<div class="card">
+                <h2 id="pwrLabel">Power (KW)</h2>
+				<p class="reading"><span id="pwrValContainer">NaN</span></p>
+                <p class="gray-label">Last reading: <span id="pwrTimestamp"></span></p>
+            </div>			
+
+			<div class="card">
+				<h2>Show Imperial?</h2>
+				<p class="reading">
+					<span>
+						<label class="switch">
+						  <input type="checkbox" id="chkSetImpContainer">
+						  <span class="slider"></span>
+						</label>
+					</span>
+				</p>
+			</div>
+        </div>
+    </div>
+	<div class="footer">
+		<p><a href="https://froudedyno.com/">Come and visit us at froudedyno.com</a></p>
+	</div>	  
+</body>
+<script>
+    // DOM Elements
+    const connectButton = document.getElementById('connectBleButton');
+    const disconnectButton = document.getElementById('disconnectBleButton');
+    const bleStateContainer = document.getElementById('bleState');
+    const speedValue = document.getElementById('spdValContainer');
+    const speedTimestamp = document.getElementById('spdTimestamp');
+	const torqueLabel = document.getElementById('trqLabel');
+    const torqueValue = document.getElementById('trqValContainer');
+    const torqueTimestamp = document.getElementById('trqTimestamp');
+	const powerLabel = document.getElementById('pwrLabel');
+    const powerValue = document.getElementById('pwrValContainer');
+    const powerTimestamp = document.getElementById('pwrTimestamp');
+	const setImpContainer = document.getElementById('chkSetImpContainer');
+
+    //Define BLE Device Specs
+    var deviceName ='DC300';
+    var bleService = '000dc300-0000-467a-9538-01f0652c74e8';
+    var speedCharacteristic= '000dc300-0001-467a-9538-01f0652c74e8';
+	var torqueCharacteristic= '000dc300-0002-467a-9538-01f0652c74e8';
+	var powerCharacteristic= '000dc300-0003-467a-9538-01f0652c74e8';
+
+    //Global Variables to Handle Bluetooth
+    var bleServer;
+    var bleServiceFound;
+    var speedCharacteristicFound;
+	var torqueCharacteristicFound;
+	var powerCharacteristicFound;
+	
+	// Global variables to handle DC300
+	var bShowImperial = false;
+	var lastTorqueNm;
+	var lastPowerKw;
+
+    // Connect Button (search for BLE Devices only if BLE is available)
+    connectButton.addEventListener('click', (event) => {
+        if (isWebBluetoothEnabled()){
+            connectToDevice();
+        }
+    });
+				
+	// Toggle switch to set metric (default) / imperial 
+	setImpContainer.addEventListener('change', function() {
+		if (setImpContainer.checked) {
+			bShowImperial = true;
+			torqueLabel.innerHTML = "Torque (lbft)";
+			powerLabel.innerHTML = "Power (hp)";					
+		} else {		
+			bShowImperial = false;
+			torqueLabel.innerHTML = "Torque (Nm)";
+			powerLabel.innerHTML = "Power (KW)";
+		}
+		
+		if (lastTorqueNm){
+			updateTorqueValue(lastTorqueNm);
+		}
+		if (lastPowerKw){
+			updatePowerValue(lastPowerKw);
+		}
+	});
+
+    // Disconnect Button
+    disconnectButton.addEventListener('click', disconnectDevice);
+
+    // Check if BLE is available in your Browser
+    function isWebBluetoothEnabled() {
+        if (!navigator.bluetooth) {
+            console.log("Web Bluetooth API is not available in this browser!");
+            bleStateContainer.innerHTML = "Web Bluetooth API is not available in this browser!";
+            return false
+        }
+        console.log('Web Bluetooth API supported in this browser.');
+        return true
+    }
+
+    // Connect to BLE Device and Enable Notifications
+    function connectToDevice(){
+        console.log('Initializing Bluetooth...');
+        navigator.bluetooth.requestDevice({
+            filters: [{name: deviceName}],
+            optionalServices: [bleService]
+        })
+        .then(device => {
+            console.log('Device Selected:', device.name);
+            bleStateContainer.innerHTML = 'Connected to device ' + device.name;
+            bleStateContainer.style.color = "#24af37";
+            device.addEventListener('gattservicedisconnected', onDisconnected);
+            return device.gatt.connect();
+        })
+        .then(gattServer =>{
+            bleServer = gattServer;
+            console.log("Connected to GATT Server");
+            return bleServer.getPrimaryService(bleService);
+        })
+        .then(service => {
+            bleServiceFound = service;
+            console.log("Service discovered:", service.uuid);
+			speedCharacteristicFound = service.getCharacteristic(speedCharacteristic);
+			torqueCharacteristicFound = service.getCharacteristic(torqueCharacteristic);
+			powerCharacteristicFound = service.getCharacteristic(powerCharacteristic);			
+            return Promise.all([speedCharacteristicFound, torqueCharacteristicFound, powerCharacteristicFound]);
+        })
+        .then(([speedCharacteristicFound, torqueCharacteristicFound, powerCharacteristicFound]) => {
+            			
+			speedCharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangeSpeed);
+            speedCharacteristicFound.startNotifications();
+			//updateSpeedValue(speedCharacteristicFound.readValue().getFloat32(0, true));
+            			
+			torqueCharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangeTorque);
+            torqueCharacteristicFound.startNotifications();
+			//updateTorqueValue(torqueCharacteristicFound.readValue().getFloat32(0, true));
+			
+			powerCharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangePower);
+            powerCharacteristicFound.startNotifications();
+			//updatePowerValue(powerCharacteristicFound.readValue().getFloat32(0, true));
+			
+			
+			
+			console.log("Notifications Started.");
+        })
+        .catch(error => {
+            console.log('Error: ', error);
+        })
+    }
+
+    function onDisconnected(event){
+        console.log('Device Disconnected:', event.target.device.name);
+        bleStateContainer.innerHTML = "Device disconnected";
+        bleStateContainer.style.color = "#d13a30";
+
+        connectToDevice();
+    }
+
+	function handleCharacteristicChangeSpeed(event){
+		var floatVal = getFloatValue(event);
+		updateSpeedValue(floatVal);		
+	}	
+	
+	function handleCharacteristicChangeTorque(event){
+		var floatVal = getFloatValue(event);
+		updateTorqueValue(floatVal);		
+	}
+	
+	function handleCharacteristicChangePower(event){
+		var floatVal = getFloatValue(event);
+		updatePowerValue(floatVal);		
+	}
+	
+	function updateSpeedValue(floatVal){
+		speedValue.innerHTML = floatVal.toFixed(2); // print to 2 dp
+		console.log("Speed Characteristic value changed: ", floatVal);				
+        speedTimestamp.innerHTML = getDateTime();
+	}	
+	
+	function updateTorqueValue(floatVal){
+		lastTorqueNm = floatVal;
+		if (bShowImperial){ floatVal = floatVal * 0.7376; }
+		torqueValue.innerHTML = floatVal.toFixed(2); // print to 2 dp
+		console.log("Torque Characteristic value changed: ", floatVal);				
+        torqueTimestamp.innerHTML = getDateTime();
+	}	
+	
+	function updatePowerValue(floatVal){
+		lastPowerKw = floatVal;
+		if (bShowImperial){ floatVal = floatVal * 1.34102; }
+		powerValue.innerHTML = floatVal.toFixed(2); // print to 2 dp
+		console.log("Power Characteristic value changed: ", floatVal);				
+        powerTimestamp.innerHTML = getDateTime();
+	}	
+
+    function getFloatValue(event){        
+		var receivedData = new Uint8Array(event.target.value.byteLength);
+		for (var i = 0; i < event.target.value.byteLength; i++) {
+			receivedData[i] = event.target.value.getUint8(i);
+		}
+		const dataView = new DataView(receivedData.buffer, 0, event.target.value.byteLength);
+		return dataView.getFloat32(0, true); // true for little-endian		
+    }
+
+    function disconnectDevice() {
+        console.log("Disconnect Device.");
+        if (bleServer && bleServer.connected) {
+            if (speedCharacteristicFound) {		// If we have one, we have them all
+                speedCharacteristicFound.stopNotifications();				
+                torqueCharacteristicFound.stopNotifications();			
+                powerCharacteristicFound.stopNotifications()
+                    .then(() => {
+                        console.log("Notifications Stopped");
+                        return bleServer.disconnect();
+                    })
+                    .then(() => {
+                        console.log("Device Disconnected");
+                        bleStateContainer.innerHTML = "Device Disconnected";
+                        bleStateContainer.style.color = "#d13a30";
+
+                    })
+                    .catch(error => {
+                        console.log("An error occurred:", error);
+                    });
+            } else {
+                console.log("No characteristic found to disconnect.");
+            }
+        } else {
+            // Throw an error if Bluetooth is not connected
+            console.error("Bluetooth is not connected.");
+            window.alert("Bluetooth is not connected.")
+        }
+    }
+
+    function getDateTime() {
+        var currentdate = new Date();
+        var day = ("00" + currentdate.getDate()).slice(-2); // Convert day to string and slice
+        var month = ("00" + (currentdate.getMonth() + 1)).slice(-2);
+        var year = currentdate.getFullYear();
+        var hours = ("00" + currentdate.getHours()).slice(-2);
+        var minutes = ("00" + currentdate.getMinutes()).slice(-2);
+        var seconds = ("00" + currentdate.getSeconds()).slice(-2);
+
+        var datetime = day + "/" + month + "/" + year + " at " + hours + ":" + minutes + ":" + seconds;
+        return datetime;
+    }
+		
+	// Prints byte array as hex string
+	function getHexFromUInt8Arr(bytes) {
+	  return Array.prototype.map.call(receivedData, x => ('00' + x.toString(16)).slice(-2)).join('');
+	}
+
+
+</script>
+
+</html>
