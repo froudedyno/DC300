@@ -165,31 +165,7 @@
 			bleServiceFound = service;
 			console.log("Service discovered:", service.uuid);
 			enableNotifications();
-			//return service.getCharacteristic(speedCharacteristic);
 		})
-		/*.then(characteristic => {
-			speedCharacteristicFound = characteristic;
-			speedCharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangeSpeed);
-			await speedCharacteristicFound.startNotifications();
-			//updateSpeedValue(characteristic.readValue().getFloat32(0, true));
-			console.log("Speed characteristic initiazed:", characteristic.uuid);
-			return bleServiceFound.getCharacteristic(torqueCharacteristic);
-		})
-		.then(characteristic => {
-			torqueCharacteristicFound = characteristic;
-			torqueCharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangeTorque);
-			await torqueCharacteristicFound.startNotifications();
-			//updateTorqueValue(characteristic.readValue().getFloat32(0, true));
-			console.log("Torque characteristic initiazed:", characteristic.uuid);
-			//return bleServiceFound.getCharacteristic(powerCharacteristic);
-		})
-		.then(characteristic => {
-			powerCharacteristicFound = characteristic;
-			characteristic.addEventListener('characteristicvaluechanged', handleCharacteristicChangePower);
-			characteristic.startNotifications();
-			//updatePowerValue(characteristic.readValue().getFloat32(0, true));
-			console.log("Power characteristic initiazed:", characteristic.uuid);
-		})*/
 		.catch(error => {
 			console.log('Error: ', error);
 		})
@@ -215,12 +191,28 @@
 			console.error('Error starting notifications:', error);
 		}
 	}
+
+	async function disableNotifications() {
+		try {			
+			if (speedCharacteristicFound) {
+			        await speedCharacteristicFound.stopNotifications();	
+			}
+                	if (torqueCharacteristicFound) {
+				await torqueCharacteristicFound.stopNotifications();	
+			}
+                	if (powerCharacteristicFound) {
+				await powerCharacteristicFound.stopNotifications();
+			}
+                        console.log("Notifications Stopped");
+		} catch (error) {
+			console.error('Error starting notifications:', error);
+		}
+	}
 	
 	function onDisconnected(event){
 		console.log('Device Disconnected:', event.target.device.name);
 		bleStateContainer.innerHTML = "Device disconnected";
-		bleStateContainer.style.color = "#d13a30";
-		
+		bleStateContainer.style.color = "#d13a30";		
 		connectToDevice();
 	}
 
@@ -272,26 +264,11 @@
     function disconnectDevice() {
         console.log("Disconnect Device.");
         if (bleServer && bleServer.connected) {
-            if (speedCharacteristicFound) {		// If we have one, we have them all
-                speedCharacteristicFound.stopNotifications();				
-                torqueCharacteristicFound.stopNotifications();			
-                powerCharacteristicFound.stopNotifications()
-                    .then(() => {
-                        console.log("Notifications Stopped");
-                        return bleServer.disconnect();
-                    })
-                    .then(() => {
-                        console.log("Device Disconnected");
-                        bleStateContainer.innerHTML = "Device Disconnected";
-                        bleStateContainer.style.color = "#d13a30";
-
-                    })
-                    .catch(error => {
-                        console.log("An error occurred:", error);
-                    });
-            } else {
-                console.log("No characteristic found to disconnect.");
-            }
+		disableNotifications();
+		bleServer.disconnect();
+		console.log("Device Disconnected");
+		bleStateContainer.innerHTML = "Device Disconnected";
+		bleStateContainer.style.color = "#d13a30";
         } else {
             // Throw an error if Bluetooth is not connected
             console.error("Bluetooth is not connected.");
