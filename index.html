@@ -250,10 +250,10 @@
     function disconnectDevice() {
         console.log("Disconnect Device.");
         if (bleServer && bleServer.connected) {
-            if (speedCharacteristicFound) {		// If we have one, we have them all
-                speedCharacteristicFound.stopNotifications();				
-                torqueCharacteristicFound.stopNotifications();			
-                powerCharacteristicFound.stopNotifications()
+            //if (speedCharacteristicFound) {		// If we have one, we have them all
+                //speedCharacteristicFound.stopNotifications();				
+                //torqueCharacteristicFound.stopNotifications();			
+                //powerCharacteristicFound.stopNotifications()
                     .then(() => {
                         console.log("Notifications Stopped");
                         return bleServer.disconnect();
@@ -267,9 +267,9 @@
                     .catch(error => {
                         console.log("An error occurred:", error);
                     });
-            } else {
-                console.log("No characteristic found to disconnect.");
-            }
+            //} else {
+                //console.log("No characteristic found to disconnect.");
+            //}
         } else {
             // Throw an error if Bluetooth is not connected
             console.error("Bluetooth is not connected.");
