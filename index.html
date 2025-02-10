@@ -264,7 +264,7 @@
     function disconnectDevice() {
         console.log("Disconnect Device.");
         if (bleServer && bleServer.connected) {
-		// disableNotifications();	// When we disable notifications, other devices will be affected. Is this correct?
+		disableNotifications();
 		bleServer.disconnect();
 		console.log("Device Disconnected");
 		bleStateContainer.innerHTML = "Device Disconnected";
