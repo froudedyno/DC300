@@ -214,49 +214,26 @@
 			const powerCharacteristicFound = await bleServiceFound.getCharacteristic(powerCharacteristic);
 			const thermo1CharacteristicFound = await bleServiceFound.getCharacteristic(thermo1Characteristic);
 			const thermo2CharacteristicFound = await bleServiceFound.getCharacteristic(thermo2Characteristic);
-						
-			//await speedCharacteristicFound.startNotifications();
-			_startNotifications(speedCharacteristicFound);
+			
+			await speedCharacteristicFound.startNotifications();
 			speedCharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangeSpeed);
 			
-			//await torqueCharacteristicFound.startNotifications();
-			_startNotifications(torqueCharacteristicFound);
+			await torqueCharacteristicFound.startNotifications();
 			torqueCharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangeTorque);
 			
-			//await powerCharacteristicFound.startNotifications();
-			_startNotifications(powerCharacteristicFound);
+			await powerCharacteristicFound.startNotifications();
 			powerCharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangePower);
 			
-			//await thermo1CharacteristicFound.startNotifications();			
-			_startNotifications(thermo1CharacteristicFound);
-			thermo1CharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangeThermo1);
+			//await thermo1CharacteristicFound.startNotifications();
+			//thermo1CharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangeThermo1);
 			
-			//await thermo2CharacteristicFound.startNotifications();		
-			_startNotifications(thermo2CharacteristicFound);
-			thermo2CharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangeThermo2);
+			//await thermo2CharacteristicFound.startNotifications();
+			//thermo2CharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangeThermo2);
 			
 			console.log('Notifications started');
 		} catch (error) {
 			console.error('Error starting notifications:', error);
 		}
-	}
-
-	/** Wrapper around {@link BluetoothRemoteGATTCharacteristic.startNotifications} to try again if the device is busy */
-	private async _startNotifications(characteristic: BluetoothRemoteGATTCharacteristic): Promise<void> {
-		return new Promise(async (resolve) => {
-			let startNotifications = async () => {
-				try {
-					await characteristic.startNotifications();
-					resolve();
-				} catch (error) {
-					if (!(error instanceof Error) || error.name != 'NotSupportedError')
-						throw error;
-					console.debug(`Device busy, could not subscribe to characteristic ${characteristic.uuid}. Retrying...`);
-					setTimeout(startNotifications, 100);
-				}
-			};
-			await startNotifications();
-		});
 	}
 
 	async function disableNotifications() {
