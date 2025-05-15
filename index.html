@@ -6,6 +6,8 @@
 
   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files.
   The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+  
+  Working version accessible here: https://froudedyno.github.io/DC300/
 -->
 
 <!DOCTYPE html>
@@ -48,7 +50,19 @@
 				<h2 id="pwrLabel">Power (KW)</h2>
 				<p class="reading"><span id="pwrValContainer">NaN</span></p>
 				<p class="gray-label">Last reading: <span id="pwrTimestamp"></span></p>
-			</div>			
+			</div>
+
+			<div class="card">
+				<h2 id="th1Label">Inlet (°C)</h2>
+				<p class="reading"><span id="th1ValContainer">NaN</span></p>
+				<p class="gray-label">Last reading: <span id="th1Timestamp"></span></p>
+			</div>		
+
+			<div class="card">
+				<h2 id="th2Label">Outlet (°C)</h2>
+				<p class="reading"><span id="th2ValContainer">NaN</span></p>
+				<p class="gray-label">Last reading: <span id="th2Timestamp"></span></p>
+			</div>				
 			
 			<div class="card">
 				<h2>Show Imperial?</h2>
@@ -80,14 +94,22 @@
 	const powerLabel = document.getElementById('pwrLabel');
 	const powerValue = document.getElementById('pwrValContainer');
 	const powerTimestamp = document.getElementById('pwrTimestamp');
+	const thermo1Label = document.getElementById('th1Label');
+	const thermo1Value = document.getElementById('th1ValContainer');
+	const thermo1Timestamp = document.getElementById('th1Timestamp');
+	const thermo2Label = document.getElementById('th2Label');
+	const thermo2Value = document.getElementById('th2ValContainer');
+	const thermo2Timestamp = document.getElementById('th2Timestamp');
 	const setImpContainer = document.getElementById('chkSetImpContainer');
-	
+
 	//Define BLE Device Specs
 	var deviceName ='DC300';
 	var bleService = '000dc300-0000-467a-9538-01f0652c74e8';
 	var speedCharacteristic= '000dc300-0001-467a-9538-01f0652c74e8';
 	var torqueCharacteristic= '000dc300-0002-467a-9538-01f0652c74e8';
 	var powerCharacteristic= '000dc300-0003-467a-9538-01f0652c74e8';
+	var thermo1Characteristic= '000dc300-0004-467a-9538-01f0652c74e8';
+	var thermo2Characteristic= '000dc300-0005-467a-9538-01f0652c74e8';
 
 	//Global Variables to Handle Bluetooth
 	var bleServer;
@@ -95,11 +117,15 @@
 	var speedCharacteristicFound;
 	var torqueCharacteristicFound;
 	var powerCharacteristicFound;
-	
+	var thermo1CharacteristicFound;
+	var thermo2CharacteristicFound;
+
 	// Global variables to handle DC300
 	var bShowImperial = false;
 	var lastTorqueNm;
 	var lastPowerKw;
+	var lastThermo1DegC;
+	var lastThermo2DegC;
 
 	// Connect Button (search for BLE Devices only if BLE is available)
 	connectButton.addEventListener('click', (event) => {
@@ -107,17 +133,21 @@
 			connectToDevice();
 		}
 	});
-				
+
 	// Toggle switch to set metric (default) / imperial 
 	setImpContainer.addEventListener('change', function() {
 		if (setImpContainer.checked) {
 			bShowImperial = true;
 			torqueLabel.innerHTML = "Torque (lbft)";
-			powerLabel.innerHTML = "Power (hp)";					
+			powerLabel.innerHTML = "Power (hp)";
+			thermo1Label.innerHTML = "Inlet (°F)";
+			thermo2Label.innerHTML = "Outlet (°F)";			
 		} else {		
 			bShowImperial = false;
 			torqueLabel.innerHTML = "Torque (Nm)";
 			powerLabel.innerHTML = "Power (KW)";
+			thermo1Label.innerHTML = "Inlet (°C)";
+			thermo2Label.innerHTML = "Outlet (°C)";
 		}
 		
 		if (lastTorqueNm){
@@ -126,8 +156,14 @@
 		if (lastPowerKw){
 			updatePowerValue(lastPowerKw);
 		}
+		if (lastThermo1DegC){
+			updateThermo1Value(lastThermo1DegC);
+		}
+		if (lastThermo2DegC){
+			updateThermo2Value(lastThermo2DegC);
+		}
 	});
-	
+
 	// Disconnect Button
 	disconnectButton.addEventListener('click', disconnectDevice);
 
@@ -176,6 +212,8 @@
 			const speedCharacteristicFound = await bleServiceFound.getCharacteristic(speedCharacteristic);
 			const torqueCharacteristicFound = await bleServiceFound.getCharacteristic(torqueCharacteristic);
 			const powerCharacteristicFound = await bleServiceFound.getCharacteristic(powerCharacteristic);
+			const thermo1CharacteristicFound = await bleServiceFound.getCharacteristic(thermo1Characteristic);
+			const thermo2CharacteristicFound = await bleServiceFound.getCharacteristic(thermo2Characteristic);
 			
 			await speedCharacteristicFound.startNotifications();
 			speedCharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangeSpeed);
@@ -186,6 +224,12 @@
 			await powerCharacteristicFound.startNotifications();
 			powerCharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangePower);
 			
+			await thermo1CharacteristicFound.startNotifications();
+			thermo1CharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangeThermo1);
+			
+			await thermo2CharacteristicFound.startNotifications();
+			thermo2CharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangeThermo2);
+			
 			console.log('Notifications started');
 		} catch (error) {
 			console.error('Error starting notifications:', error);
@@ -193,49 +237,65 @@
 	}
 
 	async function disableNotifications() {
-		try {			
+		try {
 			if (speedCharacteristicFound) {
-			        await speedCharacteristicFound.stopNotifications();	
+				await speedCharacteristicFound.stopNotifications();
 			}
-                	if (torqueCharacteristicFound) {
-				await torqueCharacteristicFound.stopNotifications();	
+			if (torqueCharacteristicFound) {
+				await torqueCharacteristicFound.stopNotifications();
 			}
-                	if (powerCharacteristicFound) {
+			if (powerCharacteristicFound) {
 				await powerCharacteristicFound.stopNotifications();
 			}
-                        console.log("Notifications Stopped");
+			if (thermo1CharacteristicFound) {
+				await thermo1CharacteristicFound.stopNotifications();
+			}
+			if (thermo2CharacteristicFound) {
+				await thermo2CharacteristicFound.stopNotifications();
+			}
+			console.log("Notifications Stopped");
 		} catch (error) {
 			console.error('Error starting notifications:', error);
 		}
 	}
-	
+
 	function onDisconnected(event){
 		console.log('Device Disconnected:', event.target.device.name);
 		bleStateContainer.innerHTML = "Device disconnected";
-		bleStateContainer.style.color = "#d13a30";		
+		bleStateContainer.style.color = "#d13a30";
 		connectToDevice();
 	}
 
 	function handleCharacteristicChangeSpeed(event){
 		var floatVal = getFloatValue(event);
-		updateSpeedValue(floatVal);		
+		updateSpeedValue(floatVal);
 	}	
-	
+
 	function handleCharacteristicChangeTorque(event){
 		var floatVal = getFloatValue(event);
-		updateTorqueValue(floatVal);		
+		updateTorqueValue(floatVal);
 	}
-	
+
 	function handleCharacteristicChangePower(event){
 		var floatVal = getFloatValue(event);
-		updatePowerValue(floatVal);		
+		updatePowerValue(floatVal);
 	}
 	
+	function handleCharacteristicChangeThermo1(event){
+		var floatVal = getFloatValue(event);
+		updateThermo1Value(floatVal);
+	}
+	
+	function handleCharacteristicChangeThermo2(event){
+		var floatVal = getFloatValue(event);
+		updateThermo2Value(floatVal);
+	}
+
 	function updateSpeedValue(floatVal){
 		speedValue.innerHTML = floatVal.toFixed(2); // print to 2 dp			
 		speedTimestamp.innerHTML = getDateTime();
 	}	
-	
+
 	function updateTorqueValue(floatVal){
 		lastTorqueNm = floatVal;
 		var val = floatVal;
@@ -243,59 +303,75 @@
 		torqueValue.innerHTML = val.toFixed(2); // print to 2 dp			
 		torqueTimestamp.innerHTML = getDateTime();
 	}	
-	
+
 	function updatePowerValue(floatVal){
 		lastPowerKw = floatVal;
 		var val = floatVal;
 		if (bShowImperial){ val = floatVal * 1.34102; }
-		powerValue.innerHTML = val.toFixed(2); // print to 2 dp			
+		powerValue.innerHTML = val.toFixed(2); // print to 2 dp
 		powerTimestamp.innerHTML = getDateTime();
 	}	
+	
+	function updateThermo1Value(floatVal){
+		lastThermo1DegC = floatVal;
+		var val = floatVal;
+		if (bShowImperial){ val = (floatVal * 1.8) + 32; }
+		thermo1Value.innerHTML = val.toFixed(2); // print to 2 dp
+		thermo1Timestamp.innerHTML = getDateTime();
+	}
+	
+	function updateThermo2Value(floatVal){
+		lastThermo2DegC = floatVal;
+		var val = floatVal;
+		if (bShowImperial){ val = (floatVal * 1.8) + 32; }
+		thermo2Value.innerHTML = val.toFixed(2); // print to 2 dp
+		thermo2Timestamp.innerHTML = getDateTime();
+	}
 
-    function getFloatValue(event){        
+	function getFloatValue(event){
 		var receivedData = new Uint8Array(event.target.value.byteLength);
 		for (var i = 0; i < event.target.value.byteLength; i++) {
 			receivedData[i] = event.target.value.getUint8(i);
 		}
 		const dataView = new DataView(receivedData.buffer, 0, event.target.value.byteLength);
-		return dataView.getFloat32(0, true); // true for little-endian		
-    }
-
-    function disconnectDevice() {
-        console.log("Disconnect Device.");
-        if (bleServer && bleServer.connected) {
-		disableNotifications();
-		bleServer.disconnect();
-		console.log("Device Disconnected");
-		bleStateContainer.innerHTML = "Device Disconnected";
-		bleStateContainer.style.color = "#d13a30";
-        } else {
-            // Throw an error if Bluetooth is not connected
-            console.error("Bluetooth is not connected.");
-            window.alert("Bluetooth is not connected.")
-        }
-    }
-
-    function getDateTime() {
-        var currentdate = new Date();
-        var day = ("00" + currentdate.getDate()).slice(-2); // Convert day to string and slice
-        var month = ("00" + (currentdate.getMonth() + 1)).slice(-2);
-        var year = currentdate.getFullYear();
-        var hours = ("00" + currentdate.getHours()).slice(-2);
-        var minutes = ("00" + currentdate.getMinutes()).slice(-2);
-        var seconds = ("00" + currentdate.getSeconds()).slice(-2);
-
-        var datetime = day + "/" + month + "/" + year + " at " + hours + ":" + minutes + ":" + seconds;
-        return datetime;
-    }
-		
-	// Prints byte array as hex string
-	function getHexFromUInt8Arr(bytes) {
-	  return Array.prototype.map.call(receivedData, x => ('00' + x.toString(16)).slice(-2)).join('');
+		return dataView.getFloat32(0, true); // true for little-endian
 	}
 
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+	function disconnectDevice() {
+		console.log("Disconnect Device.");
+		if (bleServer && bleServer.connected) {
+			disableNotifications();
+			bleServer.disconnect();
+			console.log("Device Disconnected");
+			bleStateContainer.innerHTML = "Device Disconnected";
+			bleStateContainer.style.color = "#d13a30";
+		} else {
+			// Throw an error if Bluetooth is not connected
+			console.error("Bluetooth is not connected.");
+			window.alert("Bluetooth is not connected.")
+		}
+	}
+
+	function getDateTime() {
+		var currentdate = new Date();
+		var day = ("00" + currentdate.getDate()).slice(-2); // Convert day to string and slice
+		var month = ("00" + (currentdate.getMonth() + 1)).slice(-2);
+		var year = currentdate.getFullYear();
+		var hours = ("00" + currentdate.getHours()).slice(-2);
+		var minutes = ("00" + currentdate.getMinutes()).slice(-2);
+		var seconds = ("00" + currentdate.getSeconds()).slice(-2);
+
+		var datetime = day + "/" + month + "/" + year + " at " + hours + ":" + minutes + ":" + seconds;
+		return datetime;
+	}
+
+	// Prints byte array as hex string
+	function getHexFromUInt8Arr(bytes) {
+		return Array.prototype.map.call(receivedData, x => ('00' + x.toString(16)).slice(-2)).join('');
+	}
+
+	function sleep(ms) {
+		return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 </script>
