@@ -53,13 +53,13 @@
 			</div>
 
 			<div class="card">
-				<h2 id="th1Label">Inlet (°C)</h2>
+				<h2 id="th1Label">Inlet (C)</h2>
 				<p class="reading"><span id="th1ValContainer">NaN</span></p>
 				<p class="gray-label">Last reading: <span id="th1Timestamp"></span></p>
 			</div>		
 
 			<div class="card">
-				<h2 id="th2Label">Outlet (°C)</h2>
+				<h2 id="th2Label">Outlet (C)</h2>
 				<p class="reading"><span id="th2ValContainer">NaN</span></p>
 				<p class="gray-label">Last reading: <span id="th2Timestamp"></span></p>
 			</div>				
@@ -140,14 +140,14 @@
 			bShowImperial = true;
 			torqueLabel.innerHTML = "Torque (lbft)";
 			powerLabel.innerHTML = "Power (hp)";
-			thermo1Label.innerHTML = "Inlet (°F)";
-			thermo2Label.innerHTML = "Outlet (°F)";			
+			thermo1Label.innerHTML = "Inlet (F)";
+			thermo2Label.innerHTML = "Outlet (F)";			
 		} else {		
 			bShowImperial = false;
 			torqueLabel.innerHTML = "Torque (Nm)";
 			powerLabel.innerHTML = "Power (KW)";
-			thermo1Label.innerHTML = "Inlet (°C)";
-			thermo2Label.innerHTML = "Outlet (°C)";
+			thermo1Label.innerHTML = "Inlet (C)";
+			thermo2Label.innerHTML = "Outlet (C)";
 		}
 		
 		if (lastTorqueNm){
