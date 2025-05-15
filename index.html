@@ -215,8 +215,8 @@
 			const thermo1CharacteristicFound = await bleServiceFound.getCharacteristic(thermo1Characteristic);
 			const thermo2CharacteristicFound = await bleServiceFound.getCharacteristic(thermo2Characteristic);
 			
-			await speedCharacteristicFound.startNotifications();
-			speedCharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangeSpeed);
+			//await speedCharacteristicFound.startNotifications();
+			//speedCharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangeSpeed);
 			
 			await torqueCharacteristicFound.startNotifications();
 			torqueCharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangeTorque);
@@ -224,11 +224,11 @@
 			await powerCharacteristicFound.startNotifications();
 			powerCharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangePower);
 			
-			//await thermo1CharacteristicFound.startNotifications();
-			//thermo1CharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangeThermo1);
+			await thermo1CharacteristicFound.startNotifications();
+			thermo1CharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangeThermo1);
 			
-			//await thermo2CharacteristicFound.startNotifications();
-			//thermo2CharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangeThermo2);
+			await thermo2CharacteristicFound.startNotifications();
+			thermo2CharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangeThermo2);
 			
 			console.log('Notifications started');
 		} catch (error) {
