@@ -104,7 +104,8 @@
 
 	//Define BLE Device Specs
 	var deviceName ='DC300';
-	var bleService = '000dc300-0000-467a-9538-01f0652c74e8';
+	var bleServiceSpdTrq = '000dc300-0000-467a-9538-01f0652c74e8';
+	var bleServiceThermo = '000dc300-0100-467a-9538-01f0652c74e8';
 	var speedCharacteristic= '000dc300-0001-467a-9538-01f0652c74e8';
 	var torqueCharacteristic= '000dc300-0002-467a-9538-01f0652c74e8';
 	var powerCharacteristic= '000dc300-0003-467a-9538-01f0652c74e8';
@@ -113,7 +114,8 @@
 
 	//Global Variables to Handle Bluetooth
 	var bleServer;
-	var bleServiceFound;
+	var bleServiceSpdTrqFound;
+	var bleServiceThermoFound;
 	var speedCharacteristicFound;
 	var torqueCharacteristicFound;
 	var powerCharacteristicFound;
@@ -195,11 +197,10 @@
 		.then(gattServer =>{
 			bleServer = gattServer;
 			console.log("Connected to GATT Server");
-			return bleServer.getPrimaryService(bleService);
-		})
-		.then(service => {
-			bleServiceFound = service;
-			console.log("Service discovered:", service.uuid);
+			bleServiceSpdTrqFound = bleServer.getPrimaryService(bleServiceSpdTrq);
+			console.log("Service discovered:", bleServiceSpdTrqFound.uuid);
+			bleServiceThermoFound = bleServer.getPrimaryService(bleServiceThermo);
+			console.log("Service discovered:", bleServiceThermoFound.uuid);
 			enableNotifications();
 		})
 		.catch(error => {
@@ -209,14 +210,14 @@
 
 	async function enableNotifications() {
 		try {
-			const speedCharacteristicFound = await bleServiceFound.getCharacteristic(speedCharacteristic);
-			const torqueCharacteristicFound = await bleServiceFound.getCharacteristic(torqueCharacteristic);
-			const powerCharacteristicFound = await bleServiceFound.getCharacteristic(powerCharacteristic);
-			const thermo1CharacteristicFound = await bleServiceFound.getCharacteristic(thermo1Characteristic);
-			const thermo2CharacteristicFound = await bleServiceFound.getCharacteristic(thermo2Characteristic);
+			const speedCharacteristicFound = await bleServiceSpdTrqFound.getCharacteristic(speedCharacteristic);
+			const torqueCharacteristicFound = await bleServiceSpdTrqFound.getCharacteristic(torqueCharacteristic);
+			const powerCharacteristicFound = await bleServiceSpdTrqFound.getCharacteristic(powerCharacteristic);
+			const thermo1CharacteristicFound = await bleServiceThermoFound.getCharacteristic(thermo1Characteristic);
+			const thermo2CharacteristicFound = await bleServiceThermoFound.getCharacteristic(thermo2Characteristic);
 			
-			//await speedCharacteristicFound.startNotifications();
-			//speedCharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangeSpeed);
+			await speedCharacteristicFound.startNotifications();
+			speedCharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangeSpeed);
 			
 			await torqueCharacteristicFound.startNotifications();
 			torqueCharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChangeTorque);
