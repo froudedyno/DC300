@@ -196,15 +196,22 @@
 		.then(gattServer =>{
 			bleServer = gattServer;
 			console.log("Connected to GATT Server");
-			bleServiceSpdTrqFound = bleServer.getPrimaryService(bleServiceSpdTrq);
-			console.log("Service discovered:", bleServiceSpdTrqFound.uuid);
-			bleServiceThermoFound = bleServer.getPrimaryService(bleServiceThermo);
-			console.log("Service discovered:", bleServiceThermoFound.uuid);
-			enableNotifications();
+			enableServices();
 		})
 		.catch(error => {
 			console.log('Error: ', error);
 		})
+	}
+	
+	async function enableServices() {
+	
+		bleServiceSpdTrqFound = await bleServer.getPrimaryService(bleServiceSpdTrq);
+		console.log("Service discovered:", bleServiceSpdTrqFound.uuid);
+		
+		bleServiceThermoFound = await bleServer.getPrimaryService(bleServiceThermo);
+		console.log("Service discovered:", bleServiceThermoFound.uuid);
+
+		enableNotifications();
 	}
 
 	async function enableNotifications() {
