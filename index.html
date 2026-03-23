@@ -2,7 +2,7 @@
 <html>
 <head>
     <title>DC300 Telemetry</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <link rel="icon" type="image/png" href="froude.ico">
     <meta charset="UTF-8">
     
@@ -107,44 +107,28 @@
             color: var(--text-main);
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             margin: 0;
-            padding: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            position: relative;
             min-height: 100vh;
             transition: background-color 0.3s, color 0.3s;
         }
 
-        /* --- VIEWPORT SIMULATOR --- */
-        .app-wrapper {
-            position: relative;
-            padding: 20px;
-            box-sizing: border-box;
-            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-            background-color: var(--bg-base);
-            min-height: 100vh;
+        /* --- Portrait Mode Block Overlay --- */
+        #landscapeOverlay {
+            display: none;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-surface); z-index: 9999;
+            align-items: center; justify-content: center;
+            flex-direction: column; text-align: center;
+            font-size: 1.5rem; font-weight: bold; color: var(--text-main);
         }
-        .view-pc {
-            max-width: 100%;
-            margin: 0;
-            border-radius: 0;
-            border: none;
-        }
-        .view-laptop {
-            max-width: 1366px;
-            margin: 20px auto;
-            border-radius: 12px;
-            border: 4px solid var(--border-color);
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-            height: 768px;
-            overflow-y: auto;
-        }
-        .view-phone {
-            max-width: 380px;
-            margin: 20px auto;
-            border-radius: 36px;
-            border: 12px solid #1a1a1a;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
-            height: 820px;
-            overflow-y: auto;
-            overflow-x: hidden;
+        #landscapeOverlay svg { width: 64px; height: 64px; margin-bottom: 20px; animation: rotatePhone 2s infinite ease-in-out; }
+        @keyframes rotatePhone { 0% { transform: rotate(0deg); } 50% { transform: rotate(-90deg); } 100% { transform: rotate(-90deg); } }
+
+        @media screen and (max-width: 768px) and (orientation: portrait) {
+            #landscapeOverlay { display: flex; }
+            body { overflow: hidden; padding: 0; } 
         }
 
         /* --- Top Navigation --- */
@@ -311,6 +295,20 @@
             border-radius: 8px; border: 1px solid var(--border-color);
         }
 
+        /* --- Responsive Graph Tip --- */
+        .tip-container {
+            margin-right: auto; font-size: 0.85rem; color: var(--text-muted); 
+            font-weight: bold; display: flex; align-items: center; gap: 6px; 
+            cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: background 0.2s;
+        }
+        .tip-container:hover { background: rgba(0,0,0,0.05); }
+        .tip-text { display: inline; }
+        
+        @media (max-width: 768px) {
+            .tip-text { display: none; }
+            .tip-text.show-mobile { display: inline; }
+        }
+
         .chart-container { position: relative; width: 100%; margin-bottom: 25px; display: flex; align-items: center; justify-content: center; }
 
         .graph-watermark {
@@ -365,7 +363,13 @@
 </head>
 <body class="dark-theme">
 
-<div id="appWrapper" class="app-wrapper view-pc">
+    <div id="landscapeOverlay">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+            <line x1="12" y1="18" x2="12.01" y2="18"></line>
+        </svg>
+        Please rotate your device to landscape
+    </div>
 
     <div class="top-bar">
         <div class="top-bar-left">
@@ -395,15 +399,6 @@
                 <option value="amber">Industrial Amber</option>
                 <option value="blueprint">Blueprint</option>
                 <option value="neon">Neon Terminal</option>
-            </select>
-        </div>
-
-        <div class="setting-group" style="margin-left: 10px;">
-            View: 
-            <select id="viewSelect">
-                <option value="view-pc" selected>PC (Full)</option>
-                <option value="view-laptop">Laptop (1366p)</option>
-                <option value="view-phone">Phone (Galaxy S25 Ultra)</option>
             </select>
         </div>
         
@@ -462,9 +457,11 @@
 
     <div class="graph-panel">
         <div class="graph-toolbar">
-            <span style="margin-right: auto; font-size: 0.85rem; color: var(--text-muted); font-weight: bold;">
-                💡 <i>Tip: Scroll to Zoom, Drag to Pan. Double-Click to Return to Live.</i>
-            </span>
+            <div class="tip-container" id="tipContainer">
+                <span>💡</span> 
+                <span class="tip-text" id="tipText"><i>Tip: Scroll to Zoom, Drag to Pan. Double-Click to Return to Live.</i></span>
+            </div>
+            
             <label class="record-badge" style="margin-right: 15px;">
                 <input type="checkbox" id="chkGraphActive" style="width: 16px; height: 16px; cursor: pointer;"> Record Graph
             </label>
@@ -587,7 +584,7 @@
         <a href="https://gopowersystems.com/" target="_blank">gopowersystems.com</a>
     </div>
 
-</div> <script>
+<script>
     function hexToRgba(hex, alpha) {
         let r = 0, g = 0, b = 0;
         if (hex.length == 4) {
@@ -630,8 +627,6 @@
     const btnFullscreen = document.getElementById('btnFullscreen');
     
     const themeSelect = document.getElementById('themeSelect');
-    const viewSelect = document.getElementById('viewSelect');
-    const appWrapper = document.getElementById('appWrapper');
     const sliderGaugeSize = document.getElementById('sliderGaugeSize');
     const sliderGraphSize = document.getElementById('sliderGraphSize'); 
     const pickSpeed = document.getElementById('pickSpeed');
@@ -646,6 +641,9 @@
     const peakPowerVal = document.getElementById('peakPowerVal');
     const peakInletVal = document.getElementById('peakInletVal');
     const peakOutletVal = document.getElementById('peakOutletVal');
+
+    const tipContainer = document.getElementById('tipContainer');
+    const tipText = document.getElementById('tipText');
 
     let pSpeed = 0, pTorque = 0, pPower = 0, pInlet = 0, pOutlet = 0;
 
@@ -731,10 +729,17 @@
 
     btnFullscreen.addEventListener('click', () => {
         if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch((err) => { console.log(err.message); });
+            document.documentElement.requestFullscreen().then(() => {
+                if (screen.orientation && screen.orientation.lock) {
+                    screen.orientation.lock('landscape').catch(err => console.log('Orientation lock failed:', err));
+                }
+            }).catch((err) => { console.log(err.message); });
             btnFullscreen.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path></svg> Exit Fullscreen';
         } else {
             document.exitFullscreen();
+            if (screen.orientation && screen.orientation.unlock) {
+                screen.orientation.unlock();
+            }
             btnFullscreen.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg> Fullscreen';
         }
     });
@@ -753,11 +758,9 @@
         peakInletVal.innerText = "0.0"; peakOutletVal.innerText = "0.0";
     });
 
-    viewSelect.addEventListener('change', (e) => {
-        appWrapper.className = `app-wrapper ${e.target.value}`;
-        if (liveChart) {
-            setTimeout(() => { liveChart.resize(); }, 450);
-        }
+    // Mobile Tip Toggle
+    tipContainer.addEventListener('click', () => {
+        tipText.classList.toggle('show-mobile');
     });
 
     themeSelect.addEventListener('change', (e) => {
@@ -826,7 +829,6 @@
         root.style.setProperty('--color-outlet', pickOutlet.value);
 
         if (liveChart) {
-            // Replaced gradients with solid colors for sharp lines
             liveChart.data.datasets[0].borderColor = pickSpeed.value;
             liveChart.data.datasets[0].backgroundColor = pickSpeed.value;
             liveChart.options.scales.y.title.color = pickSpeed.value;
@@ -1388,7 +1390,6 @@
             type: 'line',
             data: {
                 datasets: [
-                    // Removed 'fill: true' for solid line charts
                     { label: 'Speed', borderColor: pickSpeed.value, data: [], yAxisID: 'y', pointRadius: 0, borderWidth: 3, tension: 0.1 },
                     { label: 'Torque', borderColor: pickTorque.value, data: [], yAxisID: 'y1', pointRadius: 0, borderWidth: 3, tension: 0.1 },
                     { label: 'Power', borderColor: pickPower.value, data: [], yAxisID: 'y3', pointRadius: 0, borderWidth: 3, tension: 0.1 },
