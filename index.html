@@ -114,23 +114,6 @@
             transition: background-color 0.3s, color 0.3s;
         }
 
-        /* --- Portrait Mode Block Overlay --- */
-        #landscapeOverlay {
-            display: none;
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-surface); z-index: 9999;
-            align-items: center; justify-content: center;
-            flex-direction: column; text-align: center;
-            font-size: 1.5rem; font-weight: bold; color: var(--text-main);
-        }
-        #landscapeOverlay svg { width: 64px; height: 64px; margin-bottom: 20px; animation: rotatePhone 2s infinite ease-in-out; }
-        @keyframes rotatePhone { 0% { transform: rotate(0deg); } 50% { transform: rotate(-90deg); } 100% { transform: rotate(-90deg); } }
-
-        @media screen and (max-width: 768px) and (orientation: portrait) {
-            #landscapeOverlay { display: flex; }
-            body { overflow: hidden; padding: 0; } 
-        }
-
         /* --- Top Navigation --- */
         .top-bar {
             position: relative; 
@@ -362,14 +345,6 @@
     </style>
 </head>
 <body class="dark-theme">
-
-    <div id="landscapeOverlay">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
-            <line x1="12" y1="18" x2="12.01" y2="18"></line>
-        </svg>
-        Please rotate your device to landscape
-    </div>
 
     <div class="top-bar">
         <div class="top-bar-left">
@@ -729,17 +704,10 @@
 
     btnFullscreen.addEventListener('click', () => {
         if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().then(() => {
-                if (screen.orientation && screen.orientation.lock) {
-                    screen.orientation.lock('landscape').catch(err => console.log('Orientation lock failed:', err));
-                }
-            }).catch((err) => { console.log(err.message); });
+            document.documentElement.requestFullscreen().catch((err) => { console.log(err.message); });
             btnFullscreen.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path></svg> Exit Fullscreen';
         } else {
             document.exitFullscreen();
-            if (screen.orientation && screen.orientation.unlock) {
-                screen.orientation.unlock();
-            }
             btnFullscreen.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg> Fullscreen';
         }
     });
