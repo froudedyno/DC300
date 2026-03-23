@@ -1,3 +1,15 @@
+<!--
+  DC300 BLE Web server. Original taken from:
+  
+  Rui Santos
+  Complete project details at https://RandomNerdTutorials.com/esp32-web-bluetooth/
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files.
+  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+  
+  Working version accessible here: https://froudedyno.github.io/DC300/
+-->
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -129,21 +141,42 @@
             min-height: 90px;
         }
 
-        .top-bar-left { display: flex; align-items: center; z-index: 2; } 
+        .top-bar-left { 
+            display: flex; 
+            align-items: center;
+            z-index: 2;
+        } 
 
-        .top-bar-logo {
-            height: 85px; width: 320px; 
-            object-fit: contain; object-position: left center;
+        .top-bar-logo-lt {
+            height: 85px; 
+            width: 320px; 
+            object-fit: contain;
+            object-position: left center;
             mix-blend-mode: multiply; 
             transition: all 0.3s;
+			display: none;
+        }
+		
+		.top-bar-logo-dk {
+            height: 85px; 
+            width: 320px; 
+            object-fit: contain;
+            object-position: left center;
+            mix-blend-mode: multiply; 
+            transition: all 0.3s;
+			display: block;
         }
 
-        body:not(.light-theme) .top-bar-logo {
-            mix-blend-mode: normal;
-            background-color: #f8fafc; 
-            padding: 8px 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        body.dark-theme .top-bar-logo-lt,
+        body.midnight-theme .top-bar-logo-lt,
+        body.amber-theme .top-bar-logo-lt {
+			display: block;
+        }
+				
+		body.dark-theme .top-bar-logo-dk,
+        body.midnight-theme .top-bar-logo-dk,
+        body.amber-theme .top-bar-logo-dk {
+			display: none;
         }
 
         .top-bar-center {
@@ -348,7 +381,8 @@
 
     <div class="top-bar">
         <div class="top-bar-left">
-            <img src="GoPower.jpg" alt="Logo" class="top-bar-logo" onerror="this.style.display='none'">
+            <img src="GoPowerLight.png" alt="Logo_lt" class="top-bar-logo-lt" onerror="this.style.display='none'">
+            <img src="GoPower.jpg" alt="Logo_dk" class="top-bar-logo-dk" onerror="this.style.display='none'">
         </div> 
         
         <div class="top-bar-center">
